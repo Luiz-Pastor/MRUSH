@@ -1,26 +1,53 @@
+
 #####################################
 NAME = mrush
+VPATH = src
 #####################################
 CC = gcc
 CFLAGS = -Wall -Werror -Wextra
+TEMP_FILE = .flag
 #####################################
-SRC_FOLDER=src
 SRC=	mineria.c	\
-		pow.c
-
+		pow.c		\
+		main.c		\
+		error.c
 OBJ_FOLDER = obj
 OBJ = $(SRC:%.c=$(OBJ_FOLDER)/%.o)
 #####################################
+YELLOW		=		\033[93;1m
+DARK_YELLOW	=		\033[0;33m
+GREEN		=		\033[92;1m
+DARK_GREEN	=		\033[0;32m
+BLUE		=		\033[94;1m
+CYAN		=		\033[96;1m
+CLEAR		=		\033[0m
+#####################################
+#####################################
+#####################################
 
+# Default call
 all: $(NAME)
 
+# Compile the executable. Before, all the objects must be compiled/created
 $(NAME): $(OBJ)
-	$(CC) $< -o $(NAME) -pthread
+	@make -s clean_tmpfile
+	@echo "$(DARK_YELLOW)[EXE] Compiling $(YELLOW)$(NAME)$(CLEAR)"
+	@$(CC) $(OBJ) -o $(NAME) -pthread
+	@echo "\n\t$(BLUE)Program compiled!. Usage: $(CYAN)./$(NAME) <TARGET_INI> <ROUNDS> <N_THREADS>$(CLEAR)\n"
 
-$(OBJ_FOLDER)/%.o: $(SRC_FOLDER)/%.c
+# Compile all the necessary objects
+$(OBJ_FOLDER)/%.o: %.c
+	@if [ ! -e $(TEMP_FILE) ]; then \
+		touch $(TEMP_FILE); \
+		echo "$(DARK_GREEN)[OBJ] Compiling the objects$(CLEAR)"; \
+	fi
+
+	@echo "\t$(GREEN)=> Compiling $^$(CLEAR)"
 	@mkdir -p $(OBJ_FOLDER)
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $^ -o $@
 
+clean_tmpfile:
+	@rm -rf $(TEMP_FILE)
 #####################################
 
 clean:
@@ -31,4 +58,16 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re clean_tmpfile clear r run
+
+#####################################
+
+clear:
+	@clear
+
+r:run
+run: clear all
+	@valgrind --leak-check=full ./$(NAME) 50 3 10
+
+data-race: clear all
+	@valgrind --tool=helgrind ./$(NAME) 0 5 3
