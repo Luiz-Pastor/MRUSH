@@ -1,9 +1,5 @@
 #include "../include/mrush.h"
 
-/* NOTE: preguntar sobre 'Miner exited unexpectedly' */
-/* NOTE: data races? mutex? */
-/* NOTE: error a la hora de comporbar el numero?? puede fallar la primer busqueda */
-
 int	main(int argc, char **argv)
 {
 	long	target;
@@ -11,7 +7,6 @@ int	main(int argc, char **argv)
 	long	n_threads;
 	pid_t	pid;
 	int		status;
-
 
 	if (argc != 4)
 		argument_error(argv[0]);
@@ -24,7 +19,7 @@ int	main(int argc, char **argv)
 	/* Crear proceso hijo. Ejecutar al hijo con la funcion de mineria */
 	pid = fork();
 	if (pid < 0)
-		fork_error();
+		exit(PRC_UNEXPECTED);
 	if (pid == 0)
 		mineria(target, rounds, n_threads);
 
@@ -32,7 +27,7 @@ int	main(int argc, char **argv)
 	waitpid(pid, &status, 0);
 	
 	/* Imprimir como ha salido el hijo */
-	printf("Miner exited with status %d\n", WEXITSTATUS(status));
+	print_status(MINER, WEXITSTATUS(status));
 
 	return (0);
 }
