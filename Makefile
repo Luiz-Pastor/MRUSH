@@ -4,13 +4,16 @@ NAME = mrush
 VPATH = src
 #####################################
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra
+CFLAGS = -Wall -Werror -Wextra -g3
 TEMP_FILE = .flag
 #####################################
 SRC=	mineria.c	\
 		pow.c		\
 		main.c		\
-		error.c
+		error.c		\
+		utils.c		\
+		monitor.c
+		
 OBJ_FOLDER = obj
 OBJ = $(SRC:%.c=$(OBJ_FOLDER)/%.o)
 #####################################
