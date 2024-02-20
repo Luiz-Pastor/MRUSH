@@ -3,8 +3,9 @@
 
 # include "libs.h"
 # include "pow.h"
+# include "error.h"
 
-# define NOT_FOUND 0
+# define NOT_FOUND -1
 # define FOUND 1
 
 typedef struct s_miner t_miner;
