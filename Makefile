@@ -65,9 +65,10 @@ re: fclean all
 clear:
 	@clear
 
-r:run
-run: clear all
-	@valgrind --leak-check=full ./$(NAME) 50 3 10
+r:run1
+rr: run1 run2
+run1: clear all
+	@valgrind --leak-check=full ./$(NAME) 0 5 3
 
-data-race: clear all
-	@valgrind --tool=helgrind ./$(NAME) 0 5 3
+run2: clear all
+	@valgrind --leak-check=full ./$(NAME) 50 3 10
