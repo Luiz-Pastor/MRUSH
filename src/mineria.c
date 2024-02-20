@@ -1,5 +1,22 @@
 #include "../include/mineria.h"
 
+void	miner_exit(t_miner *miners, int *pipe1, int *pipe2, int status)
+{
+	if (miners)
+		free(miners);
+	if (pipe1)
+	{
+		close(pipe1[0]);
+		close(pipe1[1]);
+	}
+	if (pipe2)
+	{
+		close(pipe2[0]);
+		close(pipe2[1]);
+	}
+	exit(status);
+}
+
 static void	*search(void *arg)
 {
 	t_miner *miner;
@@ -56,7 +73,7 @@ static long	get_result(int n_threads, t_miner *miners)
 		if (miners[i].result != -1)
 			return (miners[i].result);
 	}
-	return -1;
+	return NOT_FOUND;
 }
 
 void	mineria(long target, long rounds, long n_threads)
@@ -64,15 +81,20 @@ void	mineria(long target, long rounds, long n_threads)
 	t_miner	*miners;
 	long	i, j;
 	int		finish;
-	long	result = -1;
+	long	result;
+	int		send[2], recieved[2];
 
 	/* Crear las estructuras que vamos a pasar */
 	miners = malloc(n_threads * sizeof(t_miner));
 	if (!miners)
-	{
-		perror("Memory problem");
-		exit(1);
-	}
+		miner_exit(NULL, NULL, NULL, PRC_UNEXPECTED);
+
+	/* TODO: Comprobar que la solucion está bien (apartado c) */
+	if (pipe(send))
+		miner_exit(miners, NULL, NULL, PRC_UNEXPECTED);
+	
+	if (pipe(recieved))
+		miner_exit(miners, send, NULL, PRC_UNEXPECTED);
 
 	for (i = 0; i < rounds; i++)
 	{
@@ -84,9 +106,11 @@ void	mineria(long target, long rounds, long n_threads)
 		{
 			if (pthread_create(&miners[j].thread, NULL, search, (void *)&miners[j]))
 			{
-				/* Error a la hora de crear el hilo */
-				free(miners);
-				exit(EXIT_FAILURE);
+				/* Error a la hora de crear el hilo. Paramos todos y salimos */
+				finish = FOUND;
+				for (j--; j >= 0; j--)
+					pthread_join(miners[j].thread, NULL);
+				miner_exit(miners, send, recieved, PRC_UNEXPECTED);
 			}
 		}
 
@@ -96,8 +120,8 @@ void	mineria(long target, long rounds, long n_threads)
 
 		/* Obtener el resultado que se haya encontrado */
 		result = get_result(n_threads, miners);
-
-		/* TODO: Comprobar que la solucion está bien (apartado c) */
+		if (result == NOT_FOUND)
+			miner_exit(miners, send, recieved, PRC_PROBLEM);
 
 		/* NOTE: Imprimir el resultado. Lo deberia de hacer el proceso MONITOR */
 		printf("Solution accepted: %08ld --> %08ld\n", target, result);
@@ -109,4 +133,5 @@ void	mineria(long target, long rounds, long n_threads)
 	/* Liberamos memoria y volvemos al proceso principal */
 	free(miners);
 	exit(EXIT_SUCCESS);
+	miner_exit(miners, send, recieved, PRC_OK);
 }
