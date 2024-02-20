@@ -4,6 +4,8 @@
 # include "libs.h"
 # include "pow.h"
 # include "error.h"
+# include "utils.h"
+# include "monitor.h"
 
 # define NOT_FOUND -1
 # define FOUND 1

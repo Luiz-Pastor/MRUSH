@@ -6,13 +6,17 @@ void	miner_exit(t_miner *miners, int *pipe1, int *pipe2, int status)
 		free(miners);
 	if (pipe1)
 	{
-		close(pipe1[0]);
-		close(pipe1[1]);
+		if (pipe1[0] >= 0)
+			close(pipe1[0]);
+		if (pipe1[1] >= 0)
+			close(pipe1[1]);
 	}
 	if (pipe2)
 	{
-		close(pipe2[0]);
-		close(pipe2[1]);
+		if (pipe2[0] >= 0)
+			close(pipe2[0]);
+		if (pipe2[1] >= 0)
+			close(pipe2[1]);
 	}
 	exit(status);
 }
@@ -76,25 +80,71 @@ static long	get_result(int n_threads, t_miner *miners)
 	return NOT_FOUND;
 }
 
+void	send_request(int send, long target, long result)
+{
+	char temp[8] = "", buffer[11];
+	int i;
+	int length;
+
+	/* Guardamos la primera linea que vamos a pasar, y la escribimos */
+	length = number_length(target);
+	for (i = 0; i < 8 - length; i++)
+		strcat(temp, "0");
+	sprintf(buffer, "%s%ld\n", temp, target);
+	write(send, buffer, 9);
+
+	/* Nos guardamos la segunda y la escribimos */
+	strcpy(temp, "");
+	length = number_length(result);
+	for (i = 0; i < 8 - length; i++)
+		strcat(temp, "0");
+	sprintf(buffer, "%s%ld", temp, target);
+	write(send, buffer, 8);
+}
+
+int	recieve_request(int request)
+{
+	char	buffer = 0;
+
+	read(request, &buffer, 1);
+	return (buffer + '0');
+}
+
+/* TODO: ejecutar el pthread_create una sola vez */
 void	mineria(long target, long rounds, long n_threads)
 {
 	t_miner	*miners;
 	long	i, j;
 	int		finish;
 	long	result;
+	int		request;
 	int		send[2], recieved[2];
+	pid_t	monitor_pid;
+
+	/* Abrimos los pipes para la comunicacion mineria-monitor*/
+	if (pipe(send))
+		miner_exit(NULL, NULL, NULL, PRC_UNEXPECTED);
+	
+	if (pipe(recieved))
+		miner_exit(NULL, send, NULL, PRC_UNEXPECTED);
+
+	/* Crear el monitor */
+	monitor_pid = fork();
+	if (monitor_pid < 0)
+		miner_exit(NULL, send, recieved, PRC_UNEXPECTED);
+	if (monitor_pid == 0)
+	{
+		close_better(&send[1]);
+		close_better(&recieved[0]);
+		monitor(recieved[1], send[0]);
+	}
+	close_better(&send[0]);		/* Mandamos por send[1] */
+	close_better(&recieved[1]);	/* Leemos por recieved[0] */
 
 	/* Crear las estructuras que vamos a pasar */
 	miners = malloc(n_threads * sizeof(t_miner));
 	if (!miners)
 		miner_exit(NULL, NULL, NULL, PRC_UNEXPECTED);
-
-	/* TODO: Comprobar que la solucion está bien (apartado c) */
-	if (pipe(send))
-		miner_exit(miners, NULL, NULL, PRC_UNEXPECTED);
-	
-	if (pipe(recieved))
-		miner_exit(miners, send, NULL, PRC_UNEXPECTED);
 
 	for (i = 0; i < rounds; i++)
 	{
@@ -123,15 +173,22 @@ void	mineria(long target, long rounds, long n_threads)
 		if (result == NOT_FOUND)
 			miner_exit(miners, send, recieved, PRC_PROBLEM);
 
-		/* NOTE: Imprimir el resultado. Lo deberia de hacer el proceso MONITOR */
-		printf("Solution accepted: %08ld --> %08ld\n", target, result);
+		/* TODO: Mandar la info al monitor */
+		send_request(send[1], target, result);
+
+		/* TODO: recibir la informacion del monitor */
+		request = recieve_request(recieved[0]);
+
+		/* TODO: Imprimir mensaje dependiendo del monitor */
+		if (request == 0)
+			printf("Solution rejected: %08ld !-> %08ld\n", target, result);
+		else
+			printf("Solution accepted: %08ld --> %08ld\n", target, result);
 
 		/* Cambiar el target */
 		target = result;
 	}
 
 	/* Liberamos memoria y volvemos al proceso principal */
-	free(miners);
-	exit(EXIT_SUCCESS);
 	miner_exit(miners, send, recieved, PRC_OK);
 }
