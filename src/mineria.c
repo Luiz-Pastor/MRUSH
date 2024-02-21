@@ -2,22 +2,15 @@
 
 void	miner_exit(t_miner *miners, int *pipe1, int *pipe2, int status)
 {
+	int	monitor;
+
 	if (miners)
 		free(miners);
-	if (pipe1)
-	{
-		if (pipe1[0] >= 0)
-			close(pipe1[0]);
-		if (pipe1[1] >= 0)
-			close(pipe1[1]);
-	}
-	if (pipe2)
-	{
-		if (pipe2[0] >= 0)
-			close(pipe2[0]);
-		if (pipe2[1] >= 0)
-			close(pipe2[1]);
-	}
+	close_pipes(pipe1, pipe2);
+
+	if (wait(&monitor) != -1)
+		print_status(MONITOR, WEXITSTATUS(monitor));
+	
 	exit(status);
 }
 
@@ -90,15 +83,15 @@ void	send_request(int send, long target, long result)
 	length = number_length(target);
 	for (i = 0; i < 8 - length; i++)
 		strcat(temp, "0");
-	sprintf(buffer, "%s%ld\n", temp, target);
-	write(send, buffer, 9);
+	sprintf(buffer, "%s%ld", temp, target);
+	write(send, buffer, 8);
 
 	/* Nos guardamos la segunda y la escribimos */
 	strcpy(temp, "");
 	length = number_length(result);
 	for (i = 0; i < 8 - length; i++)
 		strcat(temp, "0");
-	sprintf(buffer, "%s%ld", temp, target);
+	sprintf(buffer, "%s%ld", temp, result);
 	write(send, buffer, 8);
 }
 
@@ -107,7 +100,7 @@ int	recieve_request(int request)
 	char	buffer = 0;
 
 	read(request, &buffer, 1);
-	return (buffer + '0');
+	return (buffer - '0');
 }
 
 /* TODO: ejecutar el pthread_create una sola vez */
@@ -144,7 +137,9 @@ void	mineria(long target, long rounds, long n_threads)
 	/* Crear las estructuras que vamos a pasar */
 	miners = malloc(n_threads * sizeof(t_miner));
 	if (!miners)
+	{
 		miner_exit(NULL, NULL, NULL, PRC_UNEXPECTED);
+	}
 
 	for (i = 0; i < rounds; i++)
 	{
@@ -160,6 +155,7 @@ void	mineria(long target, long rounds, long n_threads)
 				finish = FOUND;
 				for (j--; j >= 0; j--)
 					pthread_join(miners[j].thread, NULL);
+				wait(NULL);
 				miner_exit(miners, send, recieved, PRC_UNEXPECTED);
 			}
 		}
@@ -180,10 +176,13 @@ void	mineria(long target, long rounds, long n_threads)
 		request = recieve_request(recieved[0]);
 
 		/* TODO: Imprimir mensaje dependiendo del monitor */
-		if (request == 0)
-			printf("Solution rejected: %08ld !-> %08ld\n", target, result);
-		else
+		if (request)
 			printf("Solution accepted: %08ld --> %08ld\n", target, result);
+		else
+		{
+			printf("Solution rejected: %08ld !-> %08ld\n", target, result);
+			miner_exit(miners, send, recieved, PRC_PROBLEM);
+		}
 
 		/* Cambiar el target */
 		target = result;

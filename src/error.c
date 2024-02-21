@@ -6,8 +6,6 @@ void	argument_error(char *name)
 	exit(1);
 }
 
-
-
 void	print_status(char *who, int status)
 {
 	if (status == PRC_UNEXPECTED)

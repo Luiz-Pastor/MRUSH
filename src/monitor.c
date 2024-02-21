@@ -18,33 +18,27 @@ void	monitor_exit(int send, int recieve, int status)
 void	monitor(int send, int recieve)
 {
 	int		length;
-	char	buffer[18];
-	char	*target, *result;
-	long	nmr_target, nmr_result;
+	char	buffer[9];
+	long	target, result;
 	long	actual;
 
 	while (1)
 	{
-		length = read(recieve, buffer, 17);
-		
-		/* Si falla en leer --> Se ha cerrado el pipe */
+		/* Leemos el primer numero. Si falla en leer --> Se ha cerrado el pipe */
+		length = read(recieve, buffer, 8);
 		if (length <= 0)
 			break ;
 		buffer[length] = '\0';
+		target = atol(buffer);
 
-		/* Leemos lo que nos han pasado: target\nresult */
-		target = strtok(buffer, "\n");
-		result = strtok(NULL, "\n");
-		if (!target || !result)
-			monitor_exit(send, recieve, PRC_UNEXPECTED);
-	
-		/* Lo convertimos a numero */
-		nmr_target = atol(target);
-		nmr_result = atol(result);
+		/* Leemos el segundo numero */
+		length = read(recieve, buffer, 8);
+		buffer[length] = '\0';
+		result = atol(buffer);
 
 		/* Comprobamos si result se equivale al target */
-		actual = pow_hash(nmr_result);
-		write_test(send, actual == nmr_target);
+		actual = pow_hash(result);
+		write_test(send, actual == target);
 	}
 	monitor_exit(send, recieve, PRC_OK);
 }
