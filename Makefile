@@ -68,10 +68,26 @@ re: fclean all
 clear:
 	@clear
 
-r:run1
-rr: run1 run2
-run1: clear all
-	@valgrind --leak-check=full ./$(NAME) 0 5 3
+test: clear all
+	@echo "$(BLUE)========================================$(CLEAR)"
+	@echo "$(BLUE)============ $(CYAN)TEST 1 (0 5 3) $(BLUE)============$(CLEAR)"
+	@echo "$(BLUE)========================================$(CLEAR)"
+	@./$(NAME) 0 5 3
 
-run2: clear all
-	@valgrind --leak-check=full ./$(NAME) 50 3 10
+	@echo "\n\n$(BLUE)==========================================$(CLEAR)"
+	@echo "$(BLUE)============ $(CYAN)TEST 2 (50 3 10) $(BLUE)============$(CLEAR)"
+	@echo "$(BLUE)==========================================$(CLEAR)"
+	@./$(NAME) 50 3 10
+
+
+VALGRIND_FLAGS = --leak-check=full --track-fds=yes -s
+valgrind: clear all
+	@echo "$(BLUE)========================================$(CLEAR)"
+	@echo "$(BLUE)============ $(CYAN)TEST 1 (0 5 3) $(BLUE)============$(CLEAR)"
+	@echo "$(BLUE)========================================$(CLEAR)"
+	@valgrind $(VALGRIND_FLAGS) ./$(NAME) 0 5 3
+
+	@echo "\n\n$(BLUE)========================================$(CLEAR)"
+	@echo "$(BLUE)============ $(CYAN)TEST 2 (50 3 10) $(BLUE)============$(CLEAR)"
+	@echo "$(BLUE)========================================$(CLEAR)"
+	@valgrind $(VALGRIND_FLAGS) ./$(NAME) 50 3 10
