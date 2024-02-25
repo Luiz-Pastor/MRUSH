@@ -61,8 +61,6 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re clean_tmpfile clear r run
-
 #####################################
 
 clear:
@@ -91,3 +89,5 @@ valgrind: clear all
 	@echo "$(BLUE)============ $(CYAN)TEST 2 (50 3 10) $(BLUE)============$(CLEAR)"
 	@echo "$(BLUE)========================================$(CLEAR)"
 	@valgrind $(VALGRIND_FLAGS) ./$(NAME) 50 3 10
+
+.PHONY: all clean fclean re clean_tmpfile clear test valgrind
