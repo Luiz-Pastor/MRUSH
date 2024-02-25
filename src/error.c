@@ -1,8 +1,23 @@
 #include "../include/error.h"
 
-void	argument_error(char *name)
+void	argument_error(ARG_ERR err, char *arg)
 {
-	printf("Incorrect arguments. Pattern:\n\t%s <TARGET_INI> <ROUNDS> <N_THREADS>\n", name);
+	printf(C_RED"[ ERROR ] "CLEAR);
+	switch (err)
+	{
+		case COUNT:
+			printf("Incorrect arguments. Pattern:\n\t\t%s%s <TARGET_INI> <ROUNDS> <N_THREADS>%s\n", C_CYAN, arg, CLEAR);
+			break ;
+		case N_THREADS:
+			printf("Incorrect number of threads (\"%s%s%s\")\n", C_CYAN, arg, CLEAR);
+			break ;
+		case ROUNDS:
+			printf("Incorrect number of rounds (\"%s%s%s\")\n", C_CYAN, arg, CLEAR);
+			break ;
+		default:
+			break ;
+	}
+
 	exit(1);
 }
 

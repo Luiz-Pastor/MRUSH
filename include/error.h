@@ -13,7 +13,13 @@
 # define STATUS_MSG "exited with status"
 # define UNEXPECTED_MSG "exited unexpectedly"
 
-void	argument_error(char *name);
+typedef enum {
+	COUNT,
+	N_THREADS,
+	ROUNDS
+} ARG_ERR;
+
+void	argument_error(ARG_ERR error, char *name);
 void	print_status(char *who, int status);
 
 #endif
