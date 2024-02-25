@@ -73,7 +73,7 @@ static long	get_result(int n_threads, t_miner *miners)
 	return NOT_FOUND;
 }
 
-void	send_request(int send, long target, long result)
+int	send_request(int send, long target, long result)
 {
 	char temp[8] = "", buffer[11];
 	int i;
@@ -84,7 +84,8 @@ void	send_request(int send, long target, long result)
 	for (i = 0; i < 8 - length; i++)
 		strcat(temp, "0");
 	sprintf(buffer, "%s%ld", temp, target);
-	write(send, buffer, 8);
+	if (write(send, buffer, 8) < 1)
+		return (1);
 
 	/* Nos guardamos la segunda y la escribimos */
 	strcpy(temp, "");
@@ -92,18 +93,20 @@ void	send_request(int send, long target, long result)
 	for (i = 0; i < 8 - length; i++)
 		strcat(temp, "0");
 	sprintf(buffer, "%s%ld", temp, result);
-	write(send, buffer, 8);
+	if (write(send, buffer, 8) < 1)
+		return (1);
+	return (0);
 }
 
 int	recieve_request(int request)
 {
 	char	buffer = 0;
 
-	read(request, &buffer, 1);
+	if (read(request, &buffer, 1) < 1)
+		return (-1);
 	return (buffer - '0');
 }
 
-/* TODO: ejecutar el pthread_create una sola vez */
 void	mineria(long target, long rounds, long n_threads)
 {
 	t_miner	*miners;
@@ -137,9 +140,7 @@ void	mineria(long target, long rounds, long n_threads)
 	/* Crear las estructuras que vamos a pasar */
 	miners = malloc(n_threads * sizeof(t_miner));
 	if (!miners)
-	{
 		miner_exit(NULL, NULL, NULL, PRC_UNEXPECTED);
-	}
 
 	for (i = 0; i < rounds; i++)
 	{
@@ -155,7 +156,6 @@ void	mineria(long target, long rounds, long n_threads)
 				finish = FOUND;
 				for (j--; j >= 0; j--)
 					pthread_join(miners[j].thread, NULL);
-				wait(NULL);
 				miner_exit(miners, send, recieved, PRC_UNEXPECTED);
 			}
 		}
@@ -169,14 +169,17 @@ void	mineria(long target, long rounds, long n_threads)
 		if (result == NOT_FOUND)
 			miner_exit(miners, send, recieved, PRC_PROBLEM);
 
-		/* TODO: Mandar la info al monitor */
-		send_request(send[1], target, result);
+		/* Mandar la info al monitor */
+		if (send_request(send[1], target, result))
+			miner_exit(miners, send, recieved, PRC_UNEXPECTED);
 
-		/* TODO: recibir la informacion del monitor */
+		/* Recibir la informacion del monitor */
 		request = recieve_request(recieved[0]);
 
-		/* TODO: Imprimir mensaje dependiendo del monitor */
-		if (request)
+		/* Imprimir mensaje dependiendo del monitor */
+		if (request == -1)
+			miner_exit(miners, send, recieved, PRC_UNEXPECTED);
+		else if (request)
 			printf("Solution accepted: %08ld --> %08ld\n", target, result);
 		else
 		{
