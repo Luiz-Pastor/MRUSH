@@ -3,8 +3,8 @@
 NAME = mrush
 VPATH = src
 #####################################
-CC = gcc
-CFLAGS = -Wall -Werror -Wextra -g3
+CC := gcc
+CFLAGS := -ansi -pedantic -g3
 TEMP_FILE = .flag
 #####################################
 SRC=	mineria.c	\
