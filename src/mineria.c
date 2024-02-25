@@ -75,36 +75,20 @@ static long	get_result(int n_threads, t_miner *miners)
 
 int	send_request(int send, long target, long result)
 {
-	char temp[8] = "", buffer[11];
-	int i;
-	int length;
-
-	/* Guardamos la primera linea que vamos a pasar, y la escribimos */
-	length = number_length(target);
-	for (i = 0; i < 8 - length; i++)
-		strcat(temp, "0");
-	sprintf(buffer, "%s%ld", temp, target);
-	if (write(send, buffer, 8) < 1)
+	if (write(send, &target, sizeof(long)) < 0)
 		return (1);
-
-	/* Nos guardamos la segunda y la escribimos */
-	strcpy(temp, "");
-	length = number_length(result);
-	for (i = 0; i < 8 - length; i++)
-		strcat(temp, "0");
-	sprintf(buffer, "%s%ld", temp, result);
-	if (write(send, buffer, 8) < 1)
+	if (write(send, &result, sizeof(long)) < 0)
 		return (1);
 	return (0);
 }
 
 int	recieve_request(int request)
 {
-	char	buffer = 0;
+	int buffer;
 
-	if (read(request, &buffer, 1) < 1)
+	if (read(request, &buffer, sizeof(int)) < 1)
 		return (-1);
-	return (buffer - '0');
+	return (buffer);
 }
 
 void	mineria(long target, long rounds, long n_threads)
