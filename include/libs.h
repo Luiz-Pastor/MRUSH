@@ -10,5 +10,8 @@
 # include <sys/wait.h>
 # include <string.h>
 
+# define C_RED	"\x1B[31m"
+# define C_CYAN	"\033[96;1m"
+# define CLEAR	"\033[0m"
 
 #endif
