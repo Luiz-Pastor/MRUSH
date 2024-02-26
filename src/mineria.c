@@ -1,5 +1,13 @@
 #include "../include/mineria.h"
 
+/*
+ * @brief Function to free all the miner process resources
+ *
+ * @param miners Array of miners
+ * @param pipe1 The first pipe used
+ * @param pipe2 The second pipe used
+ * @param status Process return value
+*/
 void	miner_exit(t_miner *miners, int *pipe1, int *pipe2, int status)
 {
 	int	monitor;
@@ -14,6 +22,13 @@ void	miner_exit(t_miner *miners, int *pipe1, int *pipe2, int status)
 	exit(status);
 }
 
+/*
+ * @brief Function to search a value
+ *
+ * @param arg Void pointer, will be casted to a miner pointer struct
+ * 
+ * @return NULL
+*/
 static void	*search(void *arg)
 {
 	t_miner *miner;
@@ -46,6 +61,14 @@ static void	*search(void *arg)
 	return (NULL);
 }
 
+/*
+ * @brief Function to init all the miners
+ *
+ * @param target Value to find
+ * @param finish Pointer to the flag to stop
+ * @param n_threads Number of threads used
+ * @param miners Array of miners
+*/
 static void	init_miners(long target, int *finish, long n_threads, t_miner *miners)
 {
 	int	i;
@@ -61,6 +84,14 @@ static void	init_miners(long target, int *finish, long n_threads, t_miner *miner
 	}
 }
 
+/*
+ * Function to get the result of the round
+ *
+ * @param n_threads Number of threads used
+ * @param miners Array of miners used
+ * 
+ * @return Value obtained, or `NOT_FOUND`
+*/
 static long	get_result(int n_threads, t_miner *miners)
 {
 	int	i;
@@ -73,6 +104,15 @@ static long	get_result(int n_threads, t_miner *miners)
 	return NOT_FOUND;
 }
 
+/*
+ * @brief Function to send to another process the result obtained
+ *
+ * @param send File descriptor to write the data to
+ * @param target Original value
+ * @param result Value to check
+ * 
+ * @return -1 on error; but, the value of the response
+*/
 int	send_request(int send, long target, long result)
 {
 	if (write(send, &target, sizeof(long)) < 0)
@@ -81,7 +121,13 @@ int	send_request(int send, long target, long result)
 		return (1);
 	return (0);
 }
-
+/*
+ * @brief Function to receive the response from another process written in a fd
+ *
+ * @param request File descriptor with the answer
+ * 
+ * @return -1 on error; but, the value of the response
+*/
 int	recieve_request(int request)
 {
 	int buffer;
@@ -91,6 +137,9 @@ int	recieve_request(int request)
 	return (buffer);
 }
 
+/**
+ * Function responsible for searching for a value
+*/
 void	mineria(long target, long rounds, long n_threads)
 {
 	t_miner	*miners;

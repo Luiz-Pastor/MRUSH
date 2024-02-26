@@ -19,7 +19,20 @@ typedef enum {
 	ROUNDS
 } ARG_ERR;
 
-void	argument_error(ARG_ERR error, char *name);
+/*
+ * @brief Function to handle program argument errors
+ * 
+ * @param error The type of error
+ * @param arg Text that prints to help understand the error
+*/
+void	argument_error(ARG_ERR error, char *arg);
+
+/*
+ * @brief Function to report how a process has gone
+ * 
+ * @param who Name of the process
+ * @param status Process return value
+*/
 void	print_status(char *who, int status);
 
 #endif

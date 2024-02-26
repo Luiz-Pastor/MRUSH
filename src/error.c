@@ -1,5 +1,8 @@
 #include "../include/error.h"
 
+/**
+ * Function to handle program argument errors
+*/
 void	argument_error(ARG_ERR err, char *arg)
 {
 	printf(C_RED"[ ERROR ] "CLEAR);
@@ -21,6 +24,9 @@ void	argument_error(ARG_ERR err, char *arg)
 	exit(1);
 }
 
+/**
+ * Function to report how a process has gone
+*/
 void	print_status(char *who, int status)
 {
 	if (status == PRC_UNEXPECTED)

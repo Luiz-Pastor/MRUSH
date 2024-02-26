@@ -31,6 +31,13 @@ struct s_miner
 	int			*finish;
 };
 
+/*
+ * @brief Function responsible for searching for a value
+ * 
+ * @param target Number to search
+ * @param rounds Number of chains of numbers
+ * @param n_threads Number of threads that will be used
+*/
 void	mineria(long target, long rounds, long n_threads);
 
 #endif
