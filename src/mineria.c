@@ -52,7 +52,7 @@ static void	*search(void *arg)
 			/* Si encontramos el hash, lo guardamos, terminamos todos los hilos y salimos */
 			miner->result = miner->start;
 			*(miner->finish) = FOUND;
-			break ; // Una alternativa seria pthread_exit()
+			break ; /* Una alternativa seria pthread_exit() */
 		}
 
 		/* Si no lo encontramos, seguimos iterando */
